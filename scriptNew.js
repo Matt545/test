@@ -8,7 +8,7 @@ ctx.fillStyle  = '#FFFFE0';
 // ctx.shadowColor = 'rgba(0,0,0,0.5)';
 
 let radius = 0.5*((canvas.width/70) * (canvas.height/70));
-let thresh = 1.2*radius;
+let thresh = 1.25*radius;
 
 let particlesArray;
 
