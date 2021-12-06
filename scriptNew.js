@@ -7,8 +7,12 @@ ctx.fillStyle  = '#FFFFE0';
 // ctx.shadowBlur = 10;
 // ctx.shadowColor = 'rgba(0,0,0,0.5)';
 
-let radius = 0.5*((canvas.width/70) * (canvas.height/70));
-let thresh = 1.25*radius;
+let radius = Math.sqrt(canvas.width*canvas.height/(40*3.141592));
+let thresh = 1.5*radius;
+let load_radius = thresh; //Now load_radius is just threshold.
+let proportion = 1.3*radius; //100;
+console.log(proportion);
+
 
 let particlesArray;
 
@@ -32,6 +36,8 @@ class lightP {
         // ctx.fill();
         // ctx.arc(this.x, this.y, thresh, 0, Math.PI * 2, false);
         // ctx.fill();
+        // ctx.arc(this.x, this.y, load_radius, 0, Math.PI * 2, false);
+        // ctx.fill();
         // ctx.fillStyle = '#FFFFE0';
     }
     //check particle position, check mouse position,
@@ -47,7 +53,7 @@ class lightP {
     //move the particle
     this.x += (this.directionX * 1);
     this.y += (this.directionY * 1);
-    
+
     //draw particle
     this.draw();
     }
@@ -92,7 +98,7 @@ class Particle {
 //create particle array
 function init(time) {
     particlesArray = [];
-    let numberOfParticles = (canvas.height * canvas.width) / 5000;
+    let numberOfParticles = 300; //(canvas.height * canvas.width) / 5000;
     for (let i = 0; i < numberOfParticles; i++) {
         let size = Math.random();
         let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
@@ -115,7 +121,7 @@ function light() {
         let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
         let directionX = (Math.random() * 5) - 2.5;
         let directionY = (Math.random() * 5) - 2.5;
-        
+
 
         lightArray.push(new lightP(x, y, directionX, directionY, size));
 
@@ -132,7 +138,7 @@ function connect(){
         let affectedLengths = [];
         for (let j = 0; j < particlesArray.length; j++) {
             let light_distance = Math.hypot((particlesArray[j].x - lightArray[i].x), (particlesArray[j].y - lightArray[i].y));
-            if (light_distance < 1.5*radius){
+            if (light_distance < load_radius){
                 affectedParticles.push(particlesArray[j]);
                 affectedLengths.push(light_distance);
             }
@@ -141,27 +147,49 @@ function connect(){
             for (let b = a; b < affectedParticles.length; b++) {
                 let particle_distance = Math.hypot((affectedParticles[a].x - affectedParticles[b].x), (affectedParticles[a].y - affectedParticles[b].y));
                 if (affectedLengths[a] < radius) {
-                    opacityValue = 1 - (particle_distance/100);
-                    ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
-                    ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
-                    ctx.stroke();
+                    if (affectedLengths[b] < radius) {
+                        opacityValue = 1 - (particle_distance/proportion);
+                        ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
+                        ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
+                        ctx.stroke();
+                    }
+                    else if (affectedLengths[b] < thresh){
+                        opacityValue = ((thresh-affectedLengths[b])/(thresh-radius))*(1 - (particle_distance/proportion));
+                        ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
+                        ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
+                        ctx.stroke();
+                    }
                 }
                 else if (affectedLengths[a] < thresh) {
-                    opacityValue = ((thresh-affectedLengths[a])/(thresh-radius))*(1 - (particle_distance/100));
-                    ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
-                    ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
-                    ctx.stroke();
+			if (affectedLengths[b] < radius) {
+				opacityValue = ((thresh-affectedLengths[a])/(thresh-radius))*(1 - (particle_distance/proportion));
+				ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
+				ctx.lineWidth = 1;
+				ctx.beginPath();
+				ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
+				ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
+				ctx.stroke();
+			}
+			else {
+				let furthest = Math.max(affectedLengths[a],affectedLengths[b]);
+				opacityValue = ((thresh-furthest)/(thresh-radius))*(1 - (particle_distance/proportion));
+				ctx.strokeStyle='rgba(255,255,224,' + opacityValue + ')';
+				ctx.lineWidth = 1;
+				ctx.beginPath();
+				ctx.moveTo(affectedParticles[a].x, affectedParticles[a].y);
+				ctx.lineTo(affectedParticles[b].x, affectedParticles[b].y);
+				ctx.stroke();
+			}
                 }
-                
-            }  
+            }
         }
-    
+
     }
 }
 
